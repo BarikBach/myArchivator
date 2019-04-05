@@ -8,19 +8,9 @@
 #include <errno.h>
 #include <utime.h>
 
+#include "bytes.h"
 #include "tar.h"
 
-
-
-
-int main(int argc, char const *argv[])
-{
-	archive("tar.tar", "/Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/tes tTAR");
-	printf("Archive OK\n");
-	unarchive("/Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/lab1/tar.tar",
-		   "/Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/lab1/");
-	return 0;
-}
 
 int archive(const char *archive_name, const char *path)
 {
@@ -51,7 +41,7 @@ char * get_new_path (const char *path, const char* name)
 	}
 	return newpath;
 }
-int get_files(const char *dir, char *path, int archive_file,
+int get_files(const char *dir, const char *path, int archive_file,
 				int (*func)(int, const char*,
 				const char *, const struct stat)) //33
 {
@@ -62,10 +52,10 @@ int get_files(const char *dir, char *path, int archive_file,
 	if ((chdir(dir) != 0) || (ptrcurrentDir == NULL))
 		return -1;
 	const struct dirent *Dir;
-	const char *newpath = NULL;
+	char *newpath = NULL;
 
 	while ((Dir = readdir(ptrcurrentDir)) != NULL) {
-		const struct stat buff;
+		struct stat buff;
 		stat(Dir->d_name, &buff);
 		if ((strcmp(".", Dir->d_name) != 0) &&
 		    (strcmp("..", Dir->d_name) != 0)) {
@@ -78,7 +68,6 @@ int get_files(const char *dir, char *path, int archive_file,
 					  func);
 			free(newpath);
 		}
-
 	}
 	chdir("..");
 	closedir(ptrcurrentDir);
@@ -86,44 +75,18 @@ int get_files(const char *dir, char *path, int archive_file,
 };
 
 
-// Вынести две функции в отдельный файл (что-то связаное с работой с байтами)
-void ll_to_byte(long long val, unsigned char *arr, int nbyte)
-{
-	for (size_t i = 0; i < nbyte; i++)
-		arr[nbyte - i - 1] = (val & (0xffLL<<((i) * 8)))>>((i) * 8);
-}
 
-long long byte_to_ll(unsigned char *arr, int nbyte)
-{
-	long long res = 0;
-
-	for (int i = nbyte - 1 ; i >= 0; i--)
-		res = res | ((unsigned long long)arr[i]<<(8*(nbyte - i - 1)));
-	return res;
-}
-
-int putnull(int file, int n_null)
-{
-	char *nullbyte = (char *) calloc(n_null, sizeof(char));
-
-	if (nullbyte == NULL)
-		return -1;
-	int res = write(file, nullbyte, n_null);
-
-	free(nullbyte);
-	return res;
-}
 
 int write_archive(int archive, const char *file_name, const char *path,
 				  const struct stat file_stat)              //34
 {
-	if (write_header(archive, stat_to_header(path, file_name, file_stat)))
+	if (write_header(archive, stat_to_header(path, file_stat)))
 		printf("Что-то пошло не так\n");
 	if (S_ISDIR(file_stat.st_mode))
 		return 0;
 	int in = open(file_name, O_RDONLY);
 	if (in == -1) {
-		perror(errno);
+		perror(NULL);
 		return -1;
 	}
 	char buffer[512];
@@ -149,28 +112,28 @@ exit:
 	return error;
 }
 
-struct header stat_to_header(const char *path, char *file_name, const struct stat statFile) //26
+struct header stat_to_header(const char *path,  const struct stat statFile) //26
 {
 	struct header header_files;
-	memset(&header_files.name, '\0', 100);
-	memset(&header_files.mode, '\0', 8);
-	memset(&header_files.uid, '\0', 8);
-	memset(&header_files.gid, '\0', 8);
-	memset(&header_files.size, '\0', 12);
-	memset(&header_files.mtime, '\0', 12);
-	memset(&header_files.checksum, '\0', 8);
-	memset(&header_files.linkflag, '\0', 1);
-	memset(&header_files.linkname, '\0', 100);
+	memset(header_files.name, '\0', 100);
+	memset(header_files.mode, '\0', 8);
+	memset(header_files.uid, '\0', 8);
+	memset(header_files.gid, '\0', 8);
+	memset(header_files.size, '\0', 12);
+	memset(header_files.mtime, '\0', 12);
+	memset(header_files.checksum, '\0', 8);
+	memset(header_files.linkflag, '\0', 1);
+	memset(header_files.linkname, '\0', 100);
 	if (strlen(path) > 99) { // 1 символ - '\0'
 		printf("Не удалось(\n");
 		//preparation for use link
 	}
-	strncpy(&header_files.name, path, 100);
-	ll_to_byte(statFile.st_mode, &header_files.mode, 8);
-	ll_to_byte(statFile.st_uid, &header_files.uid, 8);
-	ll_to_byte(statFile.st_gid, &header_files.gid, 8);
-	ll_to_byte(statFile.st_size, &header_files.size, 12);
-	ll_to_byte(statFile.st_mtimespec.tv_sec, &header_files.mtime, 12);
+	strncpy(header_files.name, path, 100);
+	ll_to_byte(statFile.st_mode, header_files.mode, 8);
+	ll_to_byte(statFile.st_uid, header_files.uid, 8);
+	ll_to_byte(statFile.st_gid, header_files.gid, 8);
+	ll_to_byte(statFile.st_size, header_files.size, 12);
+	ll_to_byte(statFile.st_mtimespec.tv_sec, header_files.mtime, 12);
 	//Добавить контрольную сумму и можно будет записывать
 	return header_files;
 }
@@ -199,16 +162,7 @@ int write_header(int archive, const struct header file_header)
 		return -10;
 	return 0;
 }
-int isnull(const char *arr, int nbyte)
-{
-	int nnonull = 0;
 
-	for (size_t i = 0; i < nbyte; i++) {
-		if (arr[i] != '\0')
-			nnonull++;
-	}
-	return nnonull;
-}
 int unarchive(const char *archive, const char *path) //36
 {
 	chdir(path);
@@ -218,14 +172,12 @@ int unarchive(const char *archive, const char *path) //36
 
 	unsigned char buffer[512];
 	int nnullblocks = 0;
-	int out = 0;
-
 
 	while (nnullblocks != 2) {
 		// Check checksum
 
 		size_t n_read_byte = read(in, buffer, 512);
-		if (n_read_byte == -1)
+		if (n_read_byte == -1ul)
 			goto exit_unarch;
 		if ( n_read_byte != 512)
 			goto exit_unarch_demage;
@@ -233,7 +185,7 @@ int unarchive(const char *archive, const char *path) //36
 			nnullblocks++;
 			continue;
 		}
-		struct header file_header = byte_to_header(buffer);
+		struct header file_header = byte_to_header((const char*) buffer);
 		if (unarchive_file(file_header, in))
 			return -1;
 	}
@@ -244,14 +196,14 @@ exit_unarch_demage:
 	printf("Архив поврежден.\n");
 	return -1;
 exit_unarch:
-	perror(errno);
+	perror(NULL);
 	return -1;
 }
 int unarchive_file(const struct header file_header, int in) //29
 {
 	printf("OK\n");
-	int out = 0;
 	printf("Unarchive file: %s\n", file_header.name);
+	int out = 0;
 	if (S_ISDIR(byte_to_ll(file_header.mode, 8))) {
 		if (create_ditr(file_header.name, file_header.mode) == -1)
 			goto exit_funarch_any;
@@ -259,7 +211,7 @@ int unarchive_file(const struct header file_header, int in) //29
 		out = open(file_header.name, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
 		if (out == -1)
 			goto exit_funarch_any;
-		if (fchmod(out, file_header.mode))
+		if (fchmod(out, byte_to_ll(file_header.mode, 8)))
 			goto exit_funarch_close;
 		if (overwrite(in, out, 512, byte_to_ll(file_header.size, 12)) == -1)
 			goto exit_funarch_close;
@@ -274,7 +226,7 @@ int unarchive_file(const struct header file_header, int in) //29
 exit_funarch_close:
 	close(out);
 exit_funarch_any:
-	perror(errno);
+	perror(NULL);
 	return -1;
 }
 int create_ditr (const char *name, const char mode[8])
@@ -290,7 +242,7 @@ int overwrite (int in, int out, int nbuffer, unsigned long long size)
 {
 	char buffer[nbuffer];
 	unsigned long long i = 0ll;
-	for (i = 0; i < (size < nbuffer? 0 : size - nbuffer); i += nbuffer) {
+	for (i = 0; i < (size < (unsigned long long) nbuffer? 0 : size - (long long)nbuffer); i += nbuffer) {
 		if (read(in, buffer, nbuffer) != nbuffer)
 			return -1;
 		if (write(out, buffer, nbuffer) != nbuffer)
@@ -300,23 +252,23 @@ int overwrite (int in, int out, int nbuffer, unsigned long long size)
 		return -1;
 	if (write(out, buffer, size % nbuffer) != size % nbuffer)
 		return -1;
-
+	return 0;
 }
 struct header byte_to_header(const char byte[512])
 {
 	struct header res_header;
 
-	strncpy(&res_header.name, byte, 100 - 1);
+	strncpy(res_header.name, byte, 100 - 1);
 	res_header.name[99] = '\0';
 
-	memcpy(&res_header.mode, (byte + 100), 8);
-	memcpy(&res_header.uid, (byte + 108), 8);
-	memcpy(&res_header.gid, (byte + 116), 8);
-	memcpy(&res_header.size, (byte + 124), 12);
+	memcpy(res_header.mode, (byte + 100), 8);
+	memcpy(res_header.uid, (byte + 108), 8);
+	memcpy(res_header.gid, (byte + 116), 8);
+	memcpy(res_header.size, (byte + 124), 12);
 
-	memcpy(&res_header.mtime, (byte + 136), 12);
-	memcpy(&res_header.checksum, (byte + 148), 8);
-	memcpy(&res_header.linkflag, (byte + 156), 1);
-	memcpy(&res_header.linkname, (byte + 157), 100);
+	memcpy(res_header.mtime, (byte + 136), 12);
+	memcpy(res_header.checksum, (byte + 148), 8);
+	memcpy(res_header.linkflag, (byte + 156), 1);
+	memcpy(res_header.linkname, (byte + 157), 100);
 	return res_header;
 }

@@ -1,7 +1,7 @@
 CC = gcc
 TARGET = hello
-CFLAGS = -w
-# -Wall -Wextra -fsanitize=address
+CFLAGS = -Wall -Wextra -fsanitize=address -Wno-implicit-function-declaration
+
 .PHONY: all clean check
 .SUFFIXES: .c .o
 
@@ -17,7 +17,7 @@ clean:
 		rm -rf $(TARGET) *.o *.EXPERIMENTAL-checkpatch-fixes *.out
 
 .c.o:
-		$(CC) $(CFLAGS)  -o $@ $<
+		$(CC) $(CFLAGS) -c -o $@ $<
 
-$(TARGET): main.o crc.o tar.o stack.o
-			gcc -o $(TARGET) main.o crc.o tar.o stack.o
+$(TARGET): main.o crc.o tar.o bytes.o
+			gcc -o $(TARGET) main.o crc.o tar.o bytes.o

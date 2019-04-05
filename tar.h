@@ -17,21 +17,25 @@ struct header {
 
 
 int archive(const char *archive_name, const char *path);
-int get_files(const char *dir, char *path, int archive_file,
-				int (*func)(int, const char*, const char *, const struct stat));
+char * get_new_path (const char *path, const char* name);
+int get_files(const char *dir, const char *path, int archive_file,
+				int (*func)(int, const char*,
+				const char *, const struct stat));
+
+
+
 int write_archive(int archive, const char *file_name, const char *path,
 				  const struct stat file_stat);
-
-void ll_to_byte(long long val, unsigned char *arr, int nbyte);
-int putnull(int file, int n_null);
-long long byte_to_ll(unsigned char *arr, int nbyte);
-
-struct header stat_to_header(const char *path, char *file_name, const struct stat statFile);
-int write_header(int archive, struct header file_header);
-
-
+struct header stat_to_header(const char *path,  const struct stat statFile);
+int write_header(int archive, const struct header file_header);
 struct header byte_to_header(const char byte[512]);
 int unarchive(const char *archive, const char *path);
+int unarchive_file(const struct header file_header, int in);
+int create_ditr (const char *name, const char mode[8]);
+int overwrite (int in, int out, int nbuffer, unsigned long long size);
+
+
+
 
 
 #endif
