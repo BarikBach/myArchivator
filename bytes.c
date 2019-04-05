@@ -3,12 +3,6 @@
 
 #include <stdlib.h>
 
-void ll_to_byte(long long val, char *arr, int nbyte);
-long long byte_to_ll(const char *arr, int nbyte);
-
-int isnull(const unsigned char *arr, int nbyte);
-int putnull(int file, int n_null);
-
 int isnull(const unsigned char *arr, int nbyte)
 {
 	int nnonull = 0;
@@ -31,18 +25,22 @@ long long byte_to_ll(const char *arr, int nbyte)
 	long long res = 0;
 
 	for (int i = nbyte - 1 ; i >= 0; i--)
-		res = res | ((unsigned long long)arr[i]<<(8*(nbyte - i - 1)));
+		res = res | ((unsigned long long)((unsigned char) arr[i])<<
+							(8*(nbyte - i - 1)));
 	return res;
 }
 
 int putnull(int file, int n_null)
 {
-	char * nullbyte = (char *) calloc(n_null, sizeof(char));
+	char *nullbyte = (char *) calloc(n_null, sizeof(char));
 
-	if (nullbyte == NULL)
+	if (nullbyte == NULL) {
+		perror(NULL);
 		return -1;
+	}
 	int res = write(file, nullbyte, n_null);
-
+	if (res == -1)
+		perror(NULL);
 	free(nullbyte);
 	return res;
 }

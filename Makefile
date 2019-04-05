@@ -1,6 +1,8 @@
 CC = gcc
 TARGET = hello
-CFLAGS = -Wall -Wextra -fsanitize=address -Wno-implicit-function-declaration
+CFLAGS = -Wall -Wextra
+
+OFILES = main.o crc.o tar.o bytes.o files.o
 
 .PHONY: all clean check
 .SUFFIXES: .c .o
@@ -11,7 +13,7 @@ all: $(TARGET)
 
 
 check:
-		./checkpatch.pl --no-tree -f crc.c tar.c stack.c main.c
+		cppcheck main.c crc.c tar.c bytes.c files.c
 
 clean:
 		rm -rf $(TARGET) *.o *.EXPERIMENTAL-checkpatch-fixes *.out
@@ -19,5 +21,10 @@ clean:
 .c.o:
 		$(CC) $(CFLAGS) -c -o $@ $<
 
-$(TARGET): main.o crc.o tar.o bytes.o
-			gcc -o $(TARGET) main.o crc.o tar.o bytes.o
+$(TARGET): $(OFILES)
+			gcc -o $(TARGET) $(OFILES)
+run:
+	./hello -c -v tar.tar /Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/testTAR
+	echo Archive OK
+
+	./hello -x -v /Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/lab1/tar.tar /Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/lab1/
