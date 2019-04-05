@@ -2,20 +2,36 @@
 #define tar_h
 
 
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
+struct header {
+      char	name[100];
+      char	mode[8];
+      char	uid[8];
+      char	gid[8];
+      char	size[12];
+      char	mtime[12];
+      char	checksum[8];
+      char	linkflag[1];
+      char	linkname[100];
+      char	pad[255];
+  };
 
 
-struct tar_header{
-  char name[100];
-};
+int archive(const char *archive_name, const char *path);
+int get_files(const char *dir, char *path, int archive_file,
+				int (*func)(int, const char*, const char *, const struct stat));
+int write_archive(int archive, const char *file_name, const char *path,
+				  const struct stat file_stat);
 
-int archive(const char* archive_name, const char* path);
-int get_files(const char* path, int archive_file, int (*func)(int, const char*));
-int write_tar(int tarFile, const char* file_name);
-int write_header(int tar_file, const char* file_name, struct stat statFile);
+void ll_to_byte(long long val, unsigned char *arr, int nbyte);
+int putnull(int file, int n_null);
+long long byte_to_ll(unsigned char *arr, int nbyte);
 
-int unarchive(const char* path_archive, const char* path);
+struct header stat_to_header(const char *path, char *file_name, const struct stat statFile);
+int write_header(int archive, struct header file_header);
+
+
+struct header byte_to_header(const char byte[512]);
+int unarchive(const char *archive, const char *path);
+
+
 #endif

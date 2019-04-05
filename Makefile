@@ -1,8 +1,23 @@
-all:
-	gcc  main.c tar.c -o lab1 -Wimplicit-function-declaration
-	./lab1 /Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/lab1
-debug:
-	gcc  main.c tar.c -o lab1 -Wall -Wextra -fsanitize=address
-	cppcheck main.c
-	./checkpatch.pl --no-tree -f main.c
-	./lab1 /Users/artem/Documents/Лабы\ весна\ 2019/Операционные\ системы/lab1
+CC = gcc
+TARGET = hello
+CFLAGS = -w
+# -Wall -Wextra -fsanitize=address
+.PHONY: all clean check
+.SUFFIXES: .c .o
+
+
+
+all: $(TARGET)
+
+
+check:
+		./checkpatch.pl --no-tree -f crc.c tar.c stack.c main.c
+
+clean:
+		rm -rf $(TARGET) *.o *.EXPERIMENTAL-checkpatch-fixes *.out
+
+.c.o:
+		$(CC) $(CFLAGS)  -o $@ $<
+
+$(TARGET): main.o crc.o tar.o stack.o
+			gcc -o $(TARGET) main.o crc.o tar.o stack.o

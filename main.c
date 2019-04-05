@@ -1,33 +1,39 @@
-
+#include "tar.h"
 #include <stdio.h>
 #include <unistd.h>
-
-
 #include <string.h>
-
-int main(int argc, char const *argv[]) {
-  /*
-  * Структура вызова:
-  * - Флаг: -a -u - разархивирование и архивирование соответсвтенно
-  * - Путь или название архива
-  * - Путь к каталогу для архивации
-  * Итого три аргумента
-  */
-
-  if (agc < 3) {
-    printf("Use ./lab -a <file> or ./lab -u <archive> <path> \n");
-  };
-  const char *path_archive = argv[2];
-  const char *path_file = argv[3];
-  if (!(strcmp("-a", argv[1])))
-  {
-    //Архивирование
-
-  }
-  if (!(strcmp("-u", argv[1])))
-  {
-    // разархивирование
-  };
-
-  return 0;
-}
+#include <stdbool.h>
+int main(int argc, char const *argv[])
+{
+	bool archive = false;
+	bool unarchive = false;
+	bool visible = false;
+	char *path_to_file = NULL;
+	char *path_to_archive = NULL;
+	for (int i = 1; i < argc; i++) {
+		if (!strcmp(argv[i]), "-c") {
+			archive = true;
+			continue;
+		}
+		if (!strcmp(argv[i]), "-v") {
+			visible = true;
+			continue;
+		}
+		if (!strcmp(argv[i]), "-x") {
+			unarchive = true;
+			continue;
+		}
+		if (path_to_archive == NULL) {
+			path_to_archive = argv[i];
+		} else {
+			path_to_file = argv[i];
+			break;
+		}
+	}
+	if (archive) {
+		archive(path_to_archive, path_to_file);
+	};
+	if (unarchive) {
+		unarchive(path_to_archive, path_to_file);
+	}
+};
