@@ -65,7 +65,11 @@ int write_archive(int archive, const char *file_name, const char *path,
 	}
 	return 0;
 exit:
+<<<<<<< HEAD
 	if (close(in) != 0)
+=======
+	if (close(in) != 0) 
+>>>>>>> f99c495fe81b198184fee63d28784bedfe4172ab
 		perror(NULL);
 	return -1;
 }
