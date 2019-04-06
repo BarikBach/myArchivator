@@ -1,6 +1,5 @@
 
 #include "bytes.h"
-
 #include <stdlib.h>
 
 int isnull(const unsigned char *arr, int nbyte)
